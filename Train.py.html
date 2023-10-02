@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>Train.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #808080;}
+.s3 { color: #6897bb;}
+.s4 { color: #6a8759;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Train.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">torch</span>
+<span class="s0">import </span><span class="s1">torch.nn </span><span class="s0">as </span><span class="s1">nn</span>
+<span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">import </span><span class="s1">torch.optim </span><span class="s0">as </span><span class="s1">optim</span>
+<span class="s0">import </span><span class="s1">torch.nn.functional </span><span class="s0">as </span><span class="s1">F</span>
+<span class="s0">from </span><span class="s1">d2l </span><span class="s0">import </span><span class="s1">torch </span><span class="s0">as </span><span class="s1">d2l</span>
+<span class="s2">#定义神经网络</span>
+<span class="s0">class </span><span class="s1">Net(nn.Module):</span>
+    <span class="s0">def </span><span class="s1">__init__(self):</span>
+        <span class="s1">super(Net</span><span class="s0">,</span><span class="s1">self).__init__()</span>
+        <span class="s1">self.l1=nn.Linear(</span><span class="s3">4</span><span class="s0">,</span><span class="s3">10</span><span class="s1">)</span>
+        <span class="s1">self.l2=nn.Linear(</span><span class="s3">10</span><span class="s0">,</span><span class="s3">1</span><span class="s1">)</span>
+    <span class="s0">def </span><span class="s1">forward(self</span><span class="s0">,</span><span class="s1">x):</span>
+        <span class="s1">x=F.relu(self.l1(x))</span>
+        <span class="s1">x=self.l2(x)</span>
+        <span class="s0">return </span><span class="s1">x</span>
+<span class="s2">#读取数据并加载为Tensor形式、</span>
+<span class="s1">Train_data=pd.read_csv(</span><span class="s4">&quot;D:/tools/Python/pythonProject/Data/train1.csv&quot;</span><span class="s1">)</span>
+<span class="s1">Tensor_Train_data=torch.tensor(Train_data.iloc[:</span><span class="s0">,</span><span class="s1">:-</span><span class="s3">1</span><span class="s1">].values</span><span class="s0">,</span><span class="s1">dtype=torch.float32</span><span class="s0">,</span><span class="s1">device=</span><span class="s4">&quot;cuda&quot;</span><span class="s1">)</span>
+<span class="s1">Labels=torch.tensor(Train_data.iloc[:</span><span class="s0">,</span><span class="s1">-</span><span class="s3">1</span><span class="s1">].values.reshape(-</span><span class="s3">1</span><span class="s0">,</span><span class="s3">1</span><span class="s1">)</span><span class="s0">,</span><span class="s1">dtype=torch.float32</span><span class="s0">,</span><span class="s1">device=</span><span class="s4">&quot;cuda&quot;</span><span class="s1">)</span>
+<span class="s2">#定义迭代器</span>
+<span class="s1">train_iter=d2l.load_array((Tensor_Train_data</span><span class="s0">,</span><span class="s1">Labels)</span><span class="s0">,</span><span class="s1">batch_size=</span><span class="s3">4</span><span class="s1">)</span>
+<span class="s1">net=Net()</span>
+<span class="s1">net.to(device=</span><span class="s4">&quot;cuda&quot;</span><span class="s1">)</span>
+
+<span class="s2">#定义损失函数，这里使用均方误差。</span>
+<span class="s1">loss=nn.MSELoss()</span>
+<span class="s2">#定义优化器，这里使用随机梯度下降法。</span>
+<span class="s1">optimizer=optim.Adam(net.parameters()</span><span class="s0">,</span><span class="s1">lr=</span><span class="s3">0.0001</span><span class="s1">)</span>
+<span class="s0">for </span><span class="s1">epoch </span><span class="s0">in </span><span class="s1">range(</span><span class="s3">500</span><span class="s1">):</span>
+    <span class="s0">for </span><span class="s1">x</span><span class="s0">,</span><span class="s1">y </span><span class="s0">in </span><span class="s1">train_iter:</span>
+        <span class="s2"># 梯度清零</span>
+        <span class="s1">optimizer.zero_grad()</span>
+        <span class="s2"># 向前传播得到预测值</span>
+        <span class="s1">Prediction = net.forward(x)</span>
+        <span class="s2"># 计算损失函数</span>
+        <span class="s1">L = loss(Prediction</span><span class="s0">, </span><span class="s1">y)</span>
+        <span class="s2"># 反向传播，更改参数</span>
+        <span class="s1">L.backward()</span>
+        <span class="s1">optimizer.step()</span>
+    <span class="s1">print(</span><span class="s4">'Epoch [{}/{}], Loss: {:.4f}'</span><span class="s1">.format(epoch + </span><span class="s3">1</span><span class="s0">, </span><span class="s3">500</span><span class="s0">, </span><span class="s1">L.item()))</span>
+
+<span class="s1">print(net.state_dict())</span></pre>
+</body>
+</html>
